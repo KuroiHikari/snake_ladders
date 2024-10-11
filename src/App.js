@@ -48,6 +48,13 @@ const generateBoard = () => {
   return board;
 };
 
+const soundCharacteristics = {
+  hissing: { frequency: { min: 3000, max: 5000 }, minDuration: 1 }, // Example values
+  blowing: { frequency: { min: 5000, max: 7000 }, minDuration: 1 },
+  buzzing: { frequency: { min: 100, max: 300 }, minDuration: 1 },
+};
+
+
 const App = () => {
   const [board, setBoard] = useState(generateBoard());
   const [playerPosition, setPlayerPosition] = useState(1);
@@ -194,66 +201,92 @@ const handleConfirmSound = async () => {
       return;
   }
 
-  const frequency = await analyzeFrequency(recordedBlob);
-  const audioDuration = await getAudioDuration(recordedBlob);
+  setIsProcessing(true); // Start processing
+  try {
+      const frequency = await analyzeFrequency(recordedBlob);
+      const audioDuration = await getAudioDuration(recordedBlob);
 
-  console.log("Duration: " + audioDuration + "s");
-  console.log("Frequency: " + frequency + "Hz");
+      console.log("Duration: " + audioDuration + "s");
+      console.log("Frequency: " + frequency + "Hz");
 
-  const isCorrect = checkSoundMatch(frequency, audioDuration, modalMessage.sound);
+      const expectedSound = modalMessage.sound; // The expected sound from the modal
+      const characteristics = soundCharacteristics[expectedSound]; // Get characteristics
 
-  if (isCorrect) {
-    let moveTiles = 0;
+      // Check if sound matches criteria
+      const isCorrect = checkSoundMatch(frequency, audioDuration, expectedSound, characteristics);
 
-    if (audioDuration >= 9) {
-      moveTiles = 3;
-    } else if (audioDuration >= 6) {
-      moveTiles = 2;
-    } else if (audioDuration >= 3) {
-      moveTiles = 1;
-    } else {
-      setModalMessage((prev) => ({ ...prev, check: 'You need to hold the sound longer! (at least 3 seconds)'}));
-      return;
-    }
+      if (isCorrect) {
+          let moveTiles = 0;
 
-    setMessage(`The sound was correct for ${audioDuration.toFixed(2)} seconds. You will move ${audioDuration.toFixed(2)} tiles.`);
+          if (audioDuration >= 9) {
+              moveTiles = 3;
+          } else if (audioDuration >= 6) {
+              moveTiles = 2;
+          } else if (audioDuration >= 3) {
+              moveTiles = 1;
+          } else {
+              setModalMessage((prev) => ({ ...prev, check: 'You need to hold the sound longer! (at least 3 seconds)' }));
+              return;
+          }
 
-    movePlayer(1);
-    setModalIsOpen(false);
-    setIsPlayerTurn(true);
-  } else {
-    setModalMessage((prev) => ({ ...prev, check: "Failed! That's not the right sound. Try again!" }));
+          setMessage(`The sound was correct for ${audioDuration.toFixed(2)} seconds. You will move ${moveTiles} tiles.`);
+
+          movePlayer(moveTiles); // Move the player based on the sound
+          setModalIsOpen(false); // Close modal
+          setIsPlayerTurn(true); // Set player turn to true
+      } else {
+          setModalMessage((prev) => ({ ...prev, check: "Failed! That's not the right sound. Try again!" }));
+      }
+  } catch (error) {
+      console.error('Error during sound confirmation:', error);
+      setModalMessage((prev) => ({ ...prev, check: "An error occurred while checking the sound." }));
+  } finally {
+      setIsProcessing(false); // Reset processing state
   }
 };
+
   
   // Function to get audio duration
   const getAudioDuration = (audioBlob) => {
     return new Promise((resolve, reject) => {
+        console.log("Getting duration for blob:", audioBlob); // Log the blob
+
         const audioElement = new Audio(URL.createObjectURL(audioBlob));
 
+        // Wait for metadata to load
         audioElement.onloadedmetadata = () => {
-            resolve(audioElement.duration);
+            console.log('Audio Duration:', audioElement.duration); // Log duration for debugging
+            if (audioElement.duration === Infinity) {
+                reject(new Error("Audio duration is infinity."));
+            } else {
+                resolve(audioElement.duration);
+            }
         };
 
         audioElement.onerror = (error) => {
             console.error('Error getting audio duration:', error);
             reject(error);
         };
+
+        // Ensure the audio element is played to get duration
+        audioElement.play().catch(error => {
+            console.error('Error playing audio:', error);
+            reject(error);
+        });
     });
-};
+  };
   
   // Function to match sound criteria
-  const checkSoundMatch = (frequency, duration, expectedSound) => {
-    // Define frequency and duration ranges for each sound type
-    // if (expectedSound === 'blowing') {
-    //   return frequency >= 5000 && frequency <= 7000 && duration >= 1; // Example duration check
-    // } else if (expectedSound === 'hissing') {
-    //   return frequency >= 3000 && frequency <= 5000 && duration >= 1;
-    // } else if (expectedSound === 'buzzing') {
-    //   return frequency >= 100 && frequency <= 300 && duration >= 1;
-    // }
-    // return false;
-    return true;
+  const checkSoundMatch = (frequency, expectedSound) => {
+    //Define frequency and duration ranges for each sound type
+    if (expectedSound === 'tornado') {
+      return frequency >= 5000 && frequency <= 7000; // Example duration check
+    } else if (expectedSound === 'snake') {
+      return frequency >= 3000 && frequency <= 5000;
+    } else if (expectedSound === 'bee') {
+      return frequency >= 100 && frequency <= 300;
+    }
+    return false;
   };
 
   return (
