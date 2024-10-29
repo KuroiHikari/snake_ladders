@@ -26,9 +26,9 @@ const generateBoard = () => {
     return Array.from(positions);
   };
 
-  const snakePositions = getRandomPositions(5);
-  const beePositions = getRandomPositions(3);
-  const tornadoPositions = getRandomPositions(2);
+  const snakePositions = getRandomPositions(10);
+  const beePositions = getRandomPositions(10);
+  const tornadoPositions = getRandomPositions(10);
 
   snakePositions.forEach((pos) => {
     board[pos - 1].content = 'snake';
@@ -48,12 +48,12 @@ const generateBoard = () => {
   return board;
 };
 
+// Define sound characteristics for hissing, blowing, and buzzing
 const soundCharacteristics = {
-  hissing: { frequency: { min: 3000, max: 5000 }, minDuration: 1 }, // Example values
+  hissing: { frequency: { min: 3000, max: 5000 }, minDuration: 1 },
   blowing: { frequency: { min: 5000, max: 7000 }, minDuration: 1 },
   buzzing: { frequency: { min: 100, max: 300 }, minDuration: 1 },
 };
-
 
 const App = () => {
   const [board, setBoard] = useState(generateBoard());
@@ -97,7 +97,7 @@ const App = () => {
   const movePlayer = (dice) => {
     let newPos = playerPosition + dice;
     if (newPos > 100) {
-        newPos = 100 - (newPos - 100);
+      newPos = 100 - (newPos - 100);
     }
 
     // Ensure the new position is between 1 and 100
@@ -106,12 +106,12 @@ const App = () => {
     setPlayerPosition(newPos);
 
     const tile = board[newPos - 1];
-    if (tile) {  // Check if the tile exists
-        if (tile.special) {
-            handleTile(newPos);
-        }
+    if (tile) { // Check if the tile exists
+      if (tile.special) {
+        handleTile(newPos);
+      }
     } else {
-        console.error('Tile does not exist:', newPos);
+      console.error('Tile does not exist:', newPos);
     }
   };
 
@@ -132,161 +132,160 @@ const App = () => {
     }
   };
 
-  const analyzeFrequency = async (audioBlob) => {
+  const analyzeAudio = async (audioBlob) => {
     return new Promise((resolve, reject) => {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const reader = new FileReader();
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const reader = new FileReader();
 
-        reader.onload = (event) => {
-            audioCtx.decodeAudioData(event.target.result, (audioBuffer) => {
-                const channelData = audioBuffer.getChannelData(0); // Use the first channel (mono)
+      reader.onload = async (event) => {
+        try {
+          const audioBuffer = await audioCtx.decodeAudioData(event.target.result);
+          const analyser = audioCtx.createAnalyser();
+          const dataArray = new Uint8Array(analyser.frequencyBinCount);
+          const waveArray = new Uint8Array(analyser.fftSize);
+          const source = audioCtx.createBufferSource();
+          source.buffer = audioBuffer;
 
-                if (channelData.length === 0) {
-                    reject('No audio data found');
-                    return;
-                }
+          // Connect to analyser and a GainNode to prevent audio output
+          const gainNode = audioCtx.createGain();
+          gainNode.gain.value = 0; // Prevent audio playback
+          source.connect(analyser);
+          analyser.connect(gainNode);
+          gainNode.connect(audioCtx.destination); // Still connects to destination but no sound due to gain = 0
 
-                const analyser = audioCtx.createAnalyser();
-                analyser.fftSize = 2048;
-                const bufferLength = analyser.frequencyBinCount;
-                const dataArray = new Float32Array(bufferLength);
+          source.start();
 
-                const source = audioCtx.createBufferSource();
-                source.buffer = audioBuffer;
-                source.connect(analyser);
-                analyser.connect(audioCtx.destination);
-                source.start();
+          // Analyze after audio has played
+          setTimeout(() => {
+            analyser.getByteFrequencyData(dataArray);
+            analyser.getByteTimeDomainData(waveArray);
 
-                setTimeout(() => {
-                    analyser.getFloatFrequencyData(dataArray);
+            // Analyze frequency data
+            const frequencyData = analyzeFrequencyData(dataArray, audioCtx);
+            const envelopeData = analyzeEnvelopeData(waveArray);
 
-                    let maxAmp = -Infinity;
-                    let peakIndex = -1;
-                    dataArray.forEach((amp, index) => {
-                        if (amp > maxAmp) {
-                            maxAmp = amp;
-                            peakIndex = index;
-                        }
-                    });
+            // Resolve with both frequency and envelope data
+            resolve({ frequencyData, envelopeData });
+          }, 500);
+        } catch (error) {
+          reject(error);
+        }
+      };
 
-                    if (peakIndex === -1) {
-                        resolve(-1);
-                        return;
-                    }
+      reader.onerror = (error) => {
+        reject(error);
+      };
 
-                    const nyquist = audioCtx.sampleRate / 2;
-                    const frequency = (peakIndex * nyquist) / bufferLength;
-
-                    audioCtx.close();
-                    resolve(frequency);
-                }, 500);
-            }, (error) => {
-                console.error('Error decoding audio data:', error);
-                reject(error);
-            });
-        };
-
-        reader.onerror = (error) => {
-            console.error('Error reading audio blob:', error);
-            reject(error);
-        };
-
-        reader.readAsArrayBuffer(audioBlob);
+      reader.readAsArrayBuffer(audioBlob);
     });
-};
+  };
 
-const handleConfirmSound = async () => {
-  if (!recordedBlob) {
+  const analyzeFrequencyData = (dataArray, audioCtx) => {
+    let totalEnergy = 0;
+    let maxAmplitude = -Infinity;
+    let peakIndex = -1;
+
+    for (let i = 0; i < dataArray.length; i++) {
+      totalEnergy += dataArray[i];
+      if (dataArray[i] > maxAmplitude) {
+        maxAmplitude = dataArray[i];
+        peakIndex = i;
+      }
+    }
+
+    // Average frequency power
+    const averageEnergy = totalEnergy / dataArray.length;
+
+    // Convert peak index to frequency using audioCtx's sample rate
+    const nyquist = audioCtx.sampleRate / 2;
+    const frequency = (peakIndex * nyquist) / dataArray.length;
+
+    return { frequency, averageEnergy, maxAmplitude };
+  };
+
+  const analyzeEnvelopeData = (waveArray) => {
+    // Basic envelope analysis (simple RMS)
+    let sumSquares = 0;
+
+    for (let i = 0; i < waveArray.length; i++) {
+      const normalizedSample = (waveArray[i] - 128) / 128; // Normalize to -1 to 1
+      sumSquares += normalizedSample * normalizedSample;
+    }
+
+    const rms = Math.sqrt(sumSquares / waveArray.length);
+    return rms;
+  };
+
+  const handleConfirmSound = async () => {
+    if (!recordedBlob) {
       setModalMessage((prev) => ({ ...prev, check: 'You need to make a sound first!' }));
       return;
-  }
+    }
 
-  setIsProcessing(true); // Start processing
-  try {
-      const frequency = await analyzeFrequency(recordedBlob);
+    setIsProcessing(true); // Start processing
+    try {
+      const { frequencyData, envelopeData } = await analyzeAudio(recordedBlob);
       const audioDuration = await getAudioDuration(recordedBlob);
-
+      
       console.log("Duration: " + audioDuration + "s");
-      console.log("Frequency: " + frequency + "Hz");
+      console.log("Frequency Data: ", frequencyData);  // Log frequency data
+      console.log("Envelope Data: ", envelopeData);    // Log envelope data
 
-      const expectedSound = modalMessage.sound; // The expected sound from the modal
-      const characteristics = soundCharacteristics[expectedSound]; // Get characteristics
-
-      // Check if sound matches criteria
-      const isCorrect = checkSoundMatch(frequency, audioDuration, expectedSound, characteristics);
-
-      if (isCorrect) {
-          let moveTiles = 0;
-
-          if (audioDuration >= 9) {
-              moveTiles = 3;
-          } else if (audioDuration >= 6) {
-              moveTiles = 2;
-          } else if (audioDuration >= 3) {
-              moveTiles = 1;
-          } else {
-              setModalMessage((prev) => ({ ...prev, check: 'You need to hold the sound longer! (at least 3 seconds)' }));
-              return;
-          }
-
-          setMessage(`The sound was correct for ${audioDuration.toFixed(2)} seconds. You will move ${moveTiles} tiles.`);
-
-          movePlayer(moveTiles); // Move the player based on the sound
-          setModalIsOpen(false); // Close modal
-          setIsPlayerTurn(true); // Set player turn to true
+      // Process results to match sound with characteristics
+      const matchedSound = matchSoundCharacteristics(frequencyData.frequency, audioDuration);
+      if (matchedSound) {
+        setModalMessage((prev) => ({ ...prev, check: `You recognized: ${matchedSound}!` }));
+        setMessage(`You recognized: ${matchedSound}!`);
       } else {
-          setModalMessage((prev) => ({ ...prev, check: "Failed! That's not the right sound. Try again!" }));
+        setModalMessage((prev) => ({ ...prev, check: "Sound not recognized. Try again!" }));
       }
-  } catch (error) {
+    } catch (error) {
       console.error('Error during sound confirmation:', error);
       setModalMessage((prev) => ({ ...prev, check: "An error occurred while checking the sound." }));
-  } finally {
+    } finally {
       setIsProcessing(false); // Reset processing state
-  }
-};
+    }
+  };
 
-  
   // Function to get audio duration
   const getAudioDuration = (audioBlob) => {
     return new Promise((resolve, reject) => {
-        console.log("Getting duration for blob:", audioBlob); // Log the blob
+      console.log("Getting duration for blob:", audioBlob); // Log the blob
 
-        const audioElement = new Audio(URL.createObjectURL(audioBlob));
+      const audioElement = new Audio(URL.createObjectURL(audioBlob));
 
-        // Wait for metadata to load
-        audioElement.onloadedmetadata = () => {
-            console.log('Audio Duration:', audioElement.duration); // Log duration for debugging
-            if (audioElement.duration === Infinity) {
-                reject(new Error("Audio duration is infinity."));
-            } else {
-                resolve(audioElement.duration);
-            }
-        };
+      // Wait for metadata to load
+      audioElement.onloadedmetadata = () => {
+        console.log('Audio Duration:', audioElement.duration); // Log duration for debugging
+        if (audioElement.duration === Infinity) {
+          reject(new Error("Audio duration is infinity."));
+        } else {
+          resolve(audioElement.duration);
+        }
+      };
 
-        audioElement.onerror = (error) => {
-            console.error('Error getting audio duration:', error);
-            reject(error);
-        };
+      audioElement.onerror = (error) => {
+        console.error('Error getting audio duration:', error);
+        reject(error);
+      };
 
-        // Ensure the audio element is played to get duration
-        audioElement.play().catch(error => {
-            console.error('Error playing audio:', error);
-            reject(error);
-        });
+      // Ensure the audio element is played to get duration
+      audioElement.play().catch(error => {
+        console.error('Error playing audio:', error);
+        reject(error);
+      });
     });
   };
-  
+
   // Function to match sound criteria
-  const checkSoundMatch = (frequency, expectedSound) => {
-    //Define frequency and duration ranges for each sound type
-    if (expectedSound === 'tornado') {
-      return frequency >= 5000 && frequency <= 7000; // Example duration check
-    } else if (expectedSound === 'snake') {
-      return frequency >= 3000 && frequency <= 5000;
-    } else if (expectedSound === 'bee') {
-      return frequency >= 100 && frequency <= 300;
+  const matchSoundCharacteristics = (frequency, duration) => {
+    // Match the frequency and duration against sound characteristics
+    for (const [sound, { frequency: { min, max }, minDuration }] of Object.entries(soundCharacteristics)) {
+      if (frequency >= min && frequency <= max && duration >= minDuration) {
+        return sound;
+      }
     }
-    return false;
+    return null;
   };
 
   return (
@@ -339,15 +338,26 @@ const handleConfirmSound = async () => {
       >
         <h2>{modalMessage.text}</h2>
         <p>Make a sound like: <strong>{modalMessage.sound}</strong></p>
+
+        {recordedBlob && (
+          <div>
+            <audio controls>
+              <source src={URL.createObjectURL(recordedBlob)} type="audio/webm" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        )}
+
         <AudioRecorder onRecordingComplete={handleRecordingComplete} />
         <button onClick={handleConfirmSound} disabled={!recordedBlob || isProcessing}>
           {isProcessing ? 'Processing...' : 'Check the sound!'}
         </button>
         <button 
-          onClick={() => { setModalIsOpen(false);
-          setRecordedBlob(null);
-          setMessage("You didn't do the task! You're staying where you are.");
-          setIsPlayerTurn(true);
+          onClick={() => { 
+            setModalIsOpen(false);
+            setRecordedBlob(null);
+            setMessage("You didn't do the task! You're staying where you are.");
+            setIsPlayerTurn(true);
           }}>
           Cancel
         </button>
