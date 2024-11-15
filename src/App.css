@@ -1,4 +1,5 @@
 .App {
+  text-transform: uppercase;
   text-align: center;
   font-family: Arial, sans-serif;
   background-image: url('./Assets/background.webp');
@@ -15,6 +16,54 @@
   overflow: hidden;
   margin: 0;
   padding: 0;
+}
+
+.turn-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1px;
+}
+
+.info-text {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #ffffff;
+  background-color: rgba(175,175,175,0.6);
+  padding: 8px 5px;
+  margin: 10px 2;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.custom-button {
+  background: #1982C4;
+  border-radius: 999px;
+  box-shadow: #1982C4 0 15px 20px -10px;
+  box-sizing: border-box;
+  color: #FFFFFF;
+  cursor: pointer;
+  font-family: Inter,Helvetica,"Apple Color Emoji","Segoe UI Emoji",NotoColorEmoji,"Noto Color Emoji","Segoe UI Symbol","Android Emoji",EmojiSymbols,-apple-system,system-ui,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans",sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 30px;
+  opacity: 1;
+  outline: 0 solid transparent;
+  padding: 8px 30px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  width: fit-content;
+  word-break: break-word;
+  border: 0;
+}
+
+.main-header {
+  text-align: center;
+  font-size: 2em;
+  color: #000000;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 20px;
 }
 
 .controls {
@@ -65,3 +114,4 @@ p {
     transform: rotate(360deg);
   }
 }
+

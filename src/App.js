@@ -1,17 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import Board from './Components/Board';
 import './App.css';
-import Modal from 'react-modal';
-//import AudioRecorder from './Components/AudioRecorder';
+import Modal, { contextType } from 'react-modal';
+import AudioRecorder from './Components/AudioRecorder';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 // Setting app element for accessibility with React Modal
 Modal.setAppElement('#root');
 
 // Function to generate the game board
 const generateBoard = () => {
+
   const board = [];
+
   for (let i = 1; i <= 100; i++) {
-    let tileColor = 'linear-gradient(to right, #16a10a 0%, #00ff13 48%)';
+    // Calculate row and column based on the tile number
+    const row = Math.floor((i - 1) / 10);
+    
+    // Alternate starting color based on row number
+    let tileColor;
+    if (row % 2 === 0) { // Even row
+        tileColor = i % 2 === 0 ? '#8AC926' : '#FFCA3A';
+    } else { // Odd row
+        tileColor = i % 2 === 0 ? '#FFCA3A' : '#8AC926';
+    }
+
+    // OLD COLORS OF BOARD
+    // let tileColor = 'linear-gradient(to right, #16a10a 0%, #00ff13 48%)';
+    
     board.push({ number: i, content: null, special: null, color: tileColor });
   }
 
@@ -35,19 +51,19 @@ const generateBoard = () => {
   snakePositions.forEach((pos) => {
     board[pos - 1].content = 'snake';
     board[pos - 1].special = 'snake';
-    board[pos - 1].color = '#8bf00e';
+    //board[pos - 1].color = '#8bf00e';
   });
 
   beePositions.forEach((pos) => {
     board[pos - 1].content = 'bee';
     board[pos - 1].special = 'bee';
-    board[pos - 1].color = '#ffeb3b';
+    //board[pos - 1].color = '#ffeb3b';
   });
 
   tornadoPositions.forEach((pos) => {
     board[pos - 1].content = 'tornado';
     board[pos - 1].special = 'tornado';
-    board[pos - 1].color = '#2196f3';
+    //board[pos - 1].color = '#2196f3';
   });
 
   return board;
@@ -167,7 +183,7 @@ const App = () => {
 
     if(tile && tile.special) {
       setModalMessage({
-        text: `You stepped on a special tile: ${tile.special} In order to move:`,
+        text: `You stepped on a special tile! In order to move:`,
         sound: tile.special,
       });
       setModalIsOpen(true);
@@ -434,8 +450,8 @@ const App = () => {
 
   return (
       <div className="App">
-        <h1>Snake, Bees & Tornadoes</h1>
-        <p>{turn}</p>
+        <h1 className='main-header'>Snake, Bees & Tornadoes</h1>
+        <p className='turn-text'>{turn}</p>
         <Board 
           board={board} 
           player1Position={player1Position} 
@@ -443,12 +459,15 @@ const App = () => {
         />
   
         <div className="controls">
-          <button onClick={rollDice} disabled={currentPlayer !== 1 && currentPlayer !== 2}>
+          <p className='info-text'>{message}</p>
+          <button 
+            className='custom-button'
+            onClick={rollDice} 
+            disabled={currentPlayer !== 1 && currentPlayer !== 2}
+          >
+            <i className="fas fa-dice" style={{ marginRight: '8px' }} />
             Roll Dice
           </button>
-          <p>{message}</p>
-          <p>Player 1 Position: {player1Position}</p>
-          <p>Player 2 Position: {player2Position}</p>
         </div>
   
         {/* Modal for special tiles */}
