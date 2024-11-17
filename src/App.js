@@ -5,6 +5,23 @@ import Modal, { contextType } from 'react-modal';
 import AudioRecorder from './Components/AudioRecorder';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
+import beeGif from '../src/Assets/bee.gif';
+import balloonGif from '../src/Assets/balloonGif.gif';
+import snakeGif from '../src/Assets/snakeGif.gif';
+import celebrateGif from '../src/Assets/celebrate.gif';
+
+const gifs = {
+  bee: beeGif,
+  snake: snakeGif,
+  tornado: balloonGif,
+};
+
+const modalBackgroundColors = {
+  bee: '#FFCE00',
+  snake: '#D6FFC2',
+  tornado: '#DECCFF',
+};
+
 // Setting app element for accessibility with React Modal
 Modal.setAppElement('#root');
 
@@ -20,9 +37,9 @@ const generateBoard = () => {
     // Alternate starting color based on row number
     let tileColor;
     if (row % 2 === 0) { // Even row
-        tileColor = i % 2 === 0 ? '#8AC926' : '#FFCA3A';
+        tileColor = i % 2 === 0 ? '#8AC926' : '#F7B751';
     } else { // Odd row
-        tileColor = i % 2 === 0 ? '#FFCA3A' : '#8AC926';
+        tileColor = i % 2 === 0 ? '#F7B751' : '#8AC926';
     }
 
     // OLD COLORS OF BOARD
@@ -66,6 +83,9 @@ const generateBoard = () => {
     //board[pos - 1].color = '#2196f3';
   });
 
+  board[board.length - 1].content = 'finish';
+  board[board.length - 1].special = 'finish';
+
   return board;
 };
 
@@ -85,7 +105,8 @@ const App = () => {
   const [turn, setTurn] = useState('Player\'s 1 turn');
   const [message, setMessage] = useState('Player 1, Click "Roll Dice" to start!');
   const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [modalMessage, setModalMessage] = useState({ text: '', check: '' });
+  const [modalMessage, setModalMessage] = useState({ text: '', check: '', image: ''});
+  const [finishModalIsOpen, setFinishModalIsOpen] = useState(false);
 
   // const [microphones, setMicrophones] = useState([]);
   // const [selectedMic, setSelectedMic] = useState('');
@@ -136,7 +157,7 @@ const App = () => {
       newPos = player1Position + dice;
 
       if (newPos > 100) 
-        newPos = 100 - (newPos - 100);
+        newPos = 100;
 
       setPlayer1Position(Math.max(1, Math.min(newPos, 100)));
       handleTile(newPos);
@@ -144,7 +165,7 @@ const App = () => {
       newPos = player2Position + dice;
 
       if (newPos > 100) 
-        newPos = 100 - (newPos - 100);
+        newPos = 100;
 
       setPlayer2Position(Math.max(1, Math.min(newPos, 100)));
       handleTile(newPos);
@@ -181,16 +202,21 @@ const App = () => {
 
     console.log("Tile special property:", tile.special, tile.number);
 
-    if(tile && tile.special) {
-      setModalMessage({
-        text: `You stepped on a special tile! In order to move:`,
-        sound: tile.special,
-      });
-      setModalIsOpen(true);
+    if (pos === 100) {
+      setFinishModalIsOpen(true);
     } else {
-      nextTurn();
+      if(tile && tile.special) {
+        setModalMessage({
+          text: `You stepped on a special tile! In order to move:`,
+          sound: tile.special,
+          image: tile.special
+        });
+        setModalIsOpen(true);
+      } else {
+        nextTurn();
+      }
     }
-    
+
     // const tile = board[pos - 1];
     // if (tile.special) {
     //   setIsPlayerTurn(false);
@@ -481,6 +507,7 @@ const App = () => {
               bottom: 'auto',
               marginRight: '-50%',
               transform: 'translate(-50%, -50%)',
+              backgroundColor: modalBackgroundColors[modalMessage.sound] || 'white',
             },
             overlay: {
               backgroundColor: 'rgba(0, 0, 0, 0.75)',
@@ -490,8 +517,56 @@ const App = () => {
         >
           <h2>{modalMessage.text}</h2>
           <p>Make a sound like: <strong>{modalMessage.sound}</strong></p>
-          <button onClick={handleCorrect}>Correct</button>
-          <button onClick={handleIncorrect}>Incorrect</button>
+
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
+            <img
+              src={gifs[modalMessage.image]}
+              alt={modalMessage.image}
+              style={{ width: '100px', height: '100px' }}
+            />
+          </div>
+
+          <button
+            onClick={handleCorrect} 
+            className='custom-button custom-button-correct'
+          >
+            Correct
+          </button>
+
+          <button 
+            onClick={handleIncorrect} 
+            className='custom-button custom-button-incorrect'>
+              Incorrect
+          </button>
+
+        </Modal>
+
+        {/* Congratulatory Modal */}
+        <Modal
+          isOpen={finishModalIsOpen}
+          style={{
+            content: {
+              top: '50%',
+              left: '50%',
+              right: 'auto',
+              bottom: 'auto',
+              marginRight: '-50%',
+              transform: 'translate(-50%, -50%)',
+            },
+            overlay: {
+              backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            },
+          }}
+          contentLabel="Congratulations Modal"
+        >
+          <h2>Congratulations!</h2>
+          <p>Player {currentPlayer} has reached the finish line! 🎉</p>
+
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
+            <img src={celebrateGif} alt='Celebration GIF'  />
+          </div>
+
+          <button onClick={() => setFinishModalIsOpen(false)}>Close</button>         
         </Modal>
       </div>
     );
