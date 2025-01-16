@@ -2,24 +2,26 @@ import React, { useState, useEffect } from 'react';
 import Board from './Components/Board';
 import './App.css';
 import Modal, { contextType } from 'react-modal';
-import AudioRecorder from './Components/AudioRecorder';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 import beeGif from '../src/Assets/bee.gif';
 import balloonGif from '../src/Assets/balloonGif.gif';
 import snakeGif from '../src/Assets/snakeGif.gif';
 import celebrateGif from '../src/Assets/celebrate.gif';
+import clothingGif from '../src/Assets/clothing.gif';
 
 const gifs = {
   bee: beeGif,
   snake: snakeGif,
   tornado: balloonGif,
+  clothing: clothingGif,
 };
 
 const modalBackgroundColors = {
   bee: '#FFCE00',
   snake: '#D6FFC2',
   tornado: '#DECCFF',
+  clothing: '#56C9D4',
 };
 
 // Setting app element for accessibility with React Modal
@@ -64,6 +66,7 @@ const generateBoard = () => {
   const snakePositions = getRandomPositions(10);
   const beePositions = getRandomPositions(10);
   const tornadoPositions = getRandomPositions(10);
+  const clothingPositions = getRandomPositions(10);
 
   snakePositions.forEach((pos) => {
     board[pos - 1].content = 'snake';
@@ -82,6 +85,11 @@ const generateBoard = () => {
     board[pos - 1].special = 'tornado';
     //board[pos - 1].color = '#2196f3';
   });
+
+  clothingPositions.forEach((pos) => {
+    board[pos - 1].content = 'clothing';
+    board[pos - 1].special = 'clothing';
+  })
 
   board[board.length - 1].content = 'finish';
   board[board.length - 1].special = 'finish';
@@ -425,11 +433,11 @@ const App = () => {
     if (currentPlayer === 1) {
       const newPos = Math.min(player1Position + 3, 100);
       setPlayer1Position(newPos);
-      setMessage(`Player 1 made a correct sound! Moving 3 tiles forward`);
+      // setMessage(`Player 1 made a correct sound! Moving 3 tiles forward`);
     } else {
       const newPos = Math.min(player2Position + 3, 100);
       setPlayer2Position(newPos);
-      setMessage(`Player 2 made a correct sound! Moving 3 tiles forward`);
+      // setMessage(`Player 2 made a correct sound! Moving 3 tiles forward`);
     }
     
     nextTurn();
@@ -445,56 +453,63 @@ const App = () => {
     
   };
 
-  const handleIncorrect = () => {
+  // const handleIncorrect = () => {
 
-    setModalIsOpen(false);
+  //   setModalIsOpen(false);
 
-    if (currentPlayer === 1) {
-      const newPos = player1Position > 1 ? player1Position - 1 : 1;
+  //   if (currentPlayer === 1) {
+  //     const newPos = player1Position > 1 ? player1Position - 1 : 1;
 
-      setPlayer1Position(newPos);
-      setMessage(`Player 1 made a incorrect sound! Moving 1 tiles backward`);
-    } else {
-      const newPos = player2Position > 1 ? player2Position - 1 : 1;
+  //     setPlayer1Position(newPos);
+  //     setMessage(`Player 1 made an incorrect sound! Moving 1 tile backward`);
+  //   } else {
+  //     const newPos = player2Position > 1 ? player2Position - 1 : 1;
 
-      setPlayer2Position(newPos);
-      setMessage(`Player 2 made a incorrect sound! Moving 1 tiles backward`);
-    }
+  //     setPlayer2Position(newPos);
+  //     setMessage(`Player 2 made an incorrect sound! Moving 1 tile backward`);
+  //   }
 
-    nextTurn();
+  //   nextTurn();
 
-    // let newPos = playerPosition - 1;
-    // newPos = Math.max(1, Math.min(newPos, 100));
+  //   // let newPos = playerPosition - 1;
+  //   // newPos = Math.max(1, Math.min(newPos, 100));
     
-    // setPlayerPosition(newPos);
+  //   // setPlayerPosition(newPos);
 
-    // setMessage("You didn't make the correct sound. Moving 1 tile back.");
-    // setModalIsOpen(false);
-    // setIsPlayerTurn(true);
+  //   // setMessage("You didn't make the correct sound. Moving 1 tile back.");
+  //   // setModalIsOpen(false);
+  //   // setIsPlayerTurn(true);
 
-  };
+  // };
 
   return (
       <div className="App">
-        <h1 className='main-header'>Snake, Bees & Tornadoes</h1>
-        <p className='turn-text'>{turn}</p>
-        <Board 
-          board={board} 
-          player1Position={player1Position} 
-          player2Position={player2Position} 
-        />
-  
-        <div className="controls">
-          <p className='info-text'>{message}</p>
-          <button 
-            className='custom-button'
-            onClick={rollDice} 
-            disabled={currentPlayer !== 1 && currentPlayer !== 2}
-          >
-            <i className="fas fa-dice" style={{ marginRight: '8px' }} />
-            Roll Dice
-          </button>
+
+        <div className="container">
+          <div className="controls">
+            <p className='info-text'>{message}</p>
+            <button 
+              className='custom-button'
+              onClick={rollDice} 
+              disabled={currentPlayer !== 1 && currentPlayer !== 2}
+            >
+              <i className="fas fa-dice" style={{ marginRight: '8px' }} />
+              Roll Dice
+            </button>
+          </div>
+
+          <div className="main-element">
+            <h1 className='main-header'>Snake, Bees & Tornadoes</h1>
+            <p className='turn-text'>{turn}</p>
+            <Board 
+              board={board} 
+              player1Position={player1Position} 
+              player2Position={player2Position} 
+            />
+          </div>
         </div>
+  
+        
   
         {/* Modal for special tiles */}
         <Modal
@@ -533,11 +548,11 @@ const App = () => {
             Correct
           </button>
 
-          <button 
+          {/* <button 
             onClick={handleIncorrect} 
             className='custom-button custom-button-incorrect'>
               Incorrect
-          </button>
+          </button> */}
 
         </Modal>
 

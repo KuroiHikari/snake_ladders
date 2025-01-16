@@ -24,9 +24,9 @@
   }
   
   .player-icon {
-    width: 40px; /* Adjust as needed */
-    height: 40px; /* Adjust as needed */
+    width: 58px; /* Adjust as needed */
+    height: 58px; /* Adjust as needed */
     position: absolute;
-    top: 10%;
-    left: 10%;
+    top: 0%;
+    left: 0%;
   }

@@ -76,8 +76,26 @@
   margin-top: 20px;
 }
 
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  gap: 20px;
+}
+
 .controls {
-  margin-top: 20px;
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%) translateX(25%);
+  width: 400px;
+  text-align: center;
+}
+
+.main-element {
+  margin-top: 10px;
 }
 
 
