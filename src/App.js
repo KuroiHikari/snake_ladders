@@ -314,14 +314,14 @@ const App = () => {
           }}
           contentLabel="Special Tile Modal"
         >
-          <h2>{modalMessage.text}</h2>
-          <p>Napodobni: <strong>{modalMessage.sound}</strong></p>
+          <h2 style={{ fontSize: '36px', fontWeight: 'bold' }}>{modalMessage.text}</h2>
+          <p style={{ fontSize: '30px' }}>Napodobni: <strong>{modalMessage.sound}</strong></p>
 
           <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
             <img
               src={gifs[modalMessage.image]}
               alt={modalMessage.image}
-              style={{ width: '100px', height: '100px' }}
+              style={{ width: '300px', height: '300px' }}
             />
           </div>
 
