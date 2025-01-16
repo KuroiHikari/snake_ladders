@@ -5,8 +5,13 @@ import player1Icon from '../Assets/boy_48px.png';
 import player2Icon from '../Assets/girl_48px.png';
 import snakeIcon from '../Assets/snake_48px.png';
 import beeIcon from '../Assets/bee_48px.png';
-import tornadoIcon from '../Assets/tornado_48px.png';
+import balloonIcon from '../Assets/ballon_48px.png';
 import clothingIcon from '../Assets/clothing_48px.png';
+import ballIcon from '../Assets/ball_48px.png';
+import coldIcon from '../Assets/cold_48px.png';
+import grasshopperIcon from '../Assets/grasshopper_48px.png';
+import catIcon from '../Assets/cat_48px.png';
+import trainIcon from '../Assets/train_48px.png';
 import finishGif from '../Assets/loading_48px.gif';
 
 const Tile = ({ number, content, color, isPlayer1, isPlayer2 }) => {
@@ -17,8 +22,18 @@ const Tile = ({ number, content, color, isPlayer1, isPlayer2 }) => {
             return <img src={snakeIcon} alt="Snake" className="tile-icon" />;
           case 'bee':
             return <img src={beeIcon} alt="Bee" className="tile-icon" />;
-          case 'tornado':
-            return <img src={tornadoIcon} alt="Tornado" className="tile-icon" />;
+          case 'balloon':
+            return <img src={balloonIcon} alt="Balloon" className="tile-icon" />;
+          case 'cold':
+            return <img src={coldIcon} alt="Cold" className="tile-icon" />;
+          case 'grasshopper':
+            return <img src={grasshopperIcon} alt="Grasshopper" className="tile-icon" />;
+          case 'cat':
+            return <img src={catIcon} alt="Cat" className="tile-icon" />;
+          case 'train':
+            return <img src={trainIcon} alt="Train" className="tile-icon" />;
+          case 'ball':
+            return <img src={ballIcon} alt="Ball" className="tile-icon" />;
           case 'clothing':
             return <img src={clothingIcon} alt="Clothing" className="tile-icon" />;
           case 'finish':
