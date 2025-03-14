@@ -27,6 +27,18 @@ const gifs = {
   train: trainGif
 };
 
+const sounds = {
+  bee: "Sounds/bee.mp3",
+  snake: "Sounds/snake.mp3",
+  balloon: "Sounds/balloon.mp3",
+  clothing: "Sounds/clothing.mp3",
+  ball: "Sounds/ball.mp3",
+  cold: "Sounds/cold.mp3",
+  grasshopper: "Sounds/grasshopper.mp3",
+  cat: "Sounds/cat.mp3",
+  train: "Sounds/train.mp3"
+}
+
 const modalBackgroundColors = {
   bee: '#FFCE00',
   snake: '#D6FFC2',
@@ -252,19 +264,22 @@ const App = () => {
 
     setModalIsOpen(false);
     
-    if (currentPlayer === 1) {
-      const newPos = Math.min(player1Position + 3, 100);
-      setPlayer1Position(newPos);
-      // setMessage(`Player 1 made a correct sound! Moving 3 tiles forward`);
-    } else {
-      const newPos = Math.min(player2Position + 3, 100);
-      setPlayer2Position(newPos);
-      // setMessage(`Player 2 made a correct sound! Moving 3 tiles forward`);
-    }
-    
     nextTurn();
     
   };
+
+  const handlePlaySound = () => {
+
+    const soundFile = sounds[modalMessage.image];
+
+    if (soundFile) {
+      const audio = new Audio(soundFile);
+      audio.play();
+    } else {
+      console.log("No sound file found for: ", modalMessage.image);
+    }
+
+  }
 
   return (
       <div className="App">
@@ -292,10 +307,7 @@ const App = () => {
             />
           </div>
         </div>
-  
-        
-  
-        {/* Modal for special tiles */}
+
         <Modal
           isOpen={modalIsOpen}
           style={{
@@ -332,11 +344,12 @@ const App = () => {
             Úloha dokončená
           </button>
 
-          {/* <button 
-            onClick={handleIncorrect} 
-            className='custom-button custom-button-incorrect'>
-              Incorrect
-          </button> */}
+          <button
+            onClick={handlePlaySound}
+            className='custom-button'
+          >
+            Zvukový príklad
+          </button>
 
         </Modal>
 

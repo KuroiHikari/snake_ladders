@@ -62,11 +62,6 @@
   box-shadow: #17e23e 0 15px 20px -10px;
 }
 
-.custom-button-incorrect {
-  background: #FF4D4D;
-  box-shadow: #FF4D4D 0 15px 20px -10px;
-}
-
 .main-header {
   text-align: center;
   font-size: 2em;
