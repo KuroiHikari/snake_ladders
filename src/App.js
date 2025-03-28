@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Board from './Components/Board';
 import './App.css';
 import Modal, { contextType } from 'react-modal';
@@ -14,6 +14,7 @@ import grasshopperGif from '../src/Assets/grasshopper.gif';
 import catGif from '../src/Assets/cat.gif';
 import trainGif from '../src/Assets/train.gif';
 import clothingGif from '../src/Assets/clothing.gif';
+import BackgroundMusic from './Components/BackgroundMusic';
 
 const gifs = {
   bee: beeGif,
@@ -28,15 +29,27 @@ const gifs = {
 };
 
 const sounds = {
-  bee: "Sounds/bee.mp3",
-  snake: "Sounds/snake.mp3",
-  balloon: "Sounds/balloon.mp3",
-  clothing: "Sounds/clothing.mp3",
-  ball: "Sounds/ball.mp3",
-  cold: "Sounds/cold.mp3",
-  grasshopper: "Sounds/grasshopper.mp3",
-  cat: "Sounds/cat.mp3",
-  train: "Sounds/train.mp3"
+  bee: "Audio/Sounds/bee.mp3",
+  snake: "Audio/Sounds/snake.mp3",
+  balloon: "Audio/Sounds/balloon.mp3",
+  clothing: "Audio/Sounds/clothing.mp3",
+  ball: "Audio/Sounds/ball.mp3",
+  cold: "Audio/Sounds/cold.mp3",
+  grasshopper: "Audio/Sounds/grasshopper.mp3",
+  cat: "Audio/Sounds/cat.mp3",
+  train: "Audio/Sounds/train.mp3"
+}
+
+const info = {
+  bee: "Audio/Info/bee.mp3",
+  snake: "Audio/Info/snake.mp3",
+  balloon: "Audio/Info/balloon.mp3",
+  clothing: "Audio/Info/clothing.mp3",
+  ball: "Audio/Info/ball.mp3",
+  cold: "Audio/Info/cold.mp3",
+  grasshopper: "Audio/Info/grasshopper.mp3",
+  cat: "Audio/Info/cat.mp3",
+  train: "Audio/Info/train.mp3"
 }
 
 const modalBackgroundColors = {
@@ -188,6 +201,7 @@ const App = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState({ text: '', check: '', image: ''});
   const [finishModalIsOpen, setFinishModalIsOpen] = useState(false);
+  const audioRef = useRef(null);
 
   const rollDice = () => {
     if(currentPlayer === 1) {
@@ -262,6 +276,11 @@ const App = () => {
 
   const handleCorrect = () => {
 
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+
     setModalIsOpen(false);
     
     nextTurn();
@@ -270,20 +289,76 @@ const App = () => {
 
   const handlePlaySound = () => {
 
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+
     const soundFile = sounds[modalMessage.image];
 
     if (soundFile) {
-      const audio = new Audio(soundFile);
-      audio.play();
+      audioRef.current = new Audio(soundFile);
+      audioRef.current.play();
     } else {
       console.log("No sound file found for: ", modalMessage.image);
     }
 
   }
 
+  const handlePlayInfo = () => {
+
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+  
+    const soundFile = info[modalMessage.image];
+  
+    if (soundFile) {
+      audioRef.current = new Audio(soundFile);
+      audioRef.current.play();
+    } else {
+      console.log("No sound file found for: ", modalMessage.image);
+    }
+
+  }
+
+  useEffect(() => {
+    // Stop the previous audio if it's playing
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+  
+    // Play the new sound if a valid modalMessage.image exists
+    if (modalMessage.image) {
+      const soundFile = info[modalMessage.image];
+  
+      if (soundFile) {
+        const audio = new Audio(soundFile);
+  
+        // Store the audio in the ref to track the currently playing sound
+        audioRef.current = audio;
+  
+        // Play the new audio
+        audio.play();
+      } else {
+        console.log("No sound file found for:", modalMessage.image);
+      }
+    }
+  
+    // Cleanup function when the component is unmounted or modalMessage changes
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    };
+  }, [modalMessage]); // This will run whenever modalMessage changes
+
   return (
       <div className="App">
-
+        <BackgroundMusic />
         <div className="container">
           <div className="controls">
             <p className='info-text'>{message}</p>
@@ -349,6 +424,13 @@ const App = () => {
             className='custom-button'
           >
             Zvukový príklad
+          </button>
+
+          <button
+            onClick={handlePlayInfo}
+            className='custom-button'
+          >
+            Vysvetlenie
           </button>
 
         </Modal>
